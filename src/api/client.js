@@ -13,6 +13,24 @@ const api = axios.create({
   withCredentials: true,
 })
 
+// doubleapplesmokeshop.com and the backend's domain are different registrable
+// domains, so the refreshToken cookie the backend also sets is a genuine
+// third-party cookie there — Safari (and increasingly Chrome) silently drop
+// it regardless of SameSite/Secure. Falling back to localStorage means the
+// refresh flow still works when that cookie gets blocked.
+const REFRESH_TOKEN_KEY = 'tb_refresh_token'
+
+export function getStoredRefreshToken() {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+export function setStoredRefreshToken(token) {
+  if (typeof window === 'undefined') return
+  if (token) window.localStorage.setItem(REFRESH_TOKEN_KEY, token)
+  else window.localStorage.removeItem(REFRESH_TOKEN_KEY)
+}
+
 let accessToken = null
 let onTokenChange = null
 
@@ -36,7 +54,7 @@ let refreshPromise = null
 function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = api
-      .post('/Api/refresh-token')
+      .post('/Api/refresh-token', { refreshToken: getStoredRefreshToken() })
       .then((res) => res.data.accessToken)
       .finally(() => {
         refreshPromise = null

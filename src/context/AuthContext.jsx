@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { setAccessToken, onAccessTokenChange, refreshAccessToken } from '../api/client'
+import { setAccessToken, onAccessTokenChange, refreshAccessToken, setStoredRefreshToken } from '../api/client'
 import * as authApi from '../api/auth'
 
 const AuthContext = createContext(null)
@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     return profile
   }, [])
 
-  // On first load, try to restore a session from the httpOnly refresh cookie
+  // On first load, try to restore a session from the stored refresh token
   // (e.g. the user closed the tab and came back within the 7-day window).
   useEffect(() => {
     let cancelled = false
@@ -47,6 +47,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const data = await authApi.login(email, password)
     setAccessToken(data.accessToken)
+    setStoredRefreshToken(data.refreshToken)
     setToken(data.accessToken)
     setUser(data.user)
     return data
@@ -65,6 +66,7 @@ export function AuthProvider({ children }) {
       // best-effort — clear local state regardless
     }
     setAccessToken(null)
+    setStoredRefreshToken(null)
     setToken(null)
     setUser(null)
   }
