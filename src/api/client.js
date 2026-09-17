@@ -1,15 +1,15 @@
 import axios from 'axios'
 
-// Always same-origin: the frontend's own domain proxies /Api, /Product, /Order
-// and /Address to the real backend (see vite.config.js for dev, vercel.json for
-// prod). The backend's domain is a different *site* from the frontend's (both
-// are vercel.app subdomains, which is a public suffix), so the refreshToken
-// cookie would be a genuinely cross-site cookie if requests went straight to
-// it — browsers increasingly block those outright regardless of SameSite
-// config. Routing through the frontend's own origin makes it a first-party
-// cookie instead, which no browser blocks.
+// Calls the backend directly (no same-origin proxy trick — that relied on
+// vercel.json rewrites, which only exist on Vercel and are a no-op on
+// Hostinger, silently 404ing every API call there). The refreshToken cookie
+// is cross-site as a result, so the backend sets it with
+// `sameSite: "none", secure: true` in production to make sure it's still
+// sent. Override with VITE_API_URL at build time if the backend URL changes.
+const API_URL = import.meta.env.VITE_API_URL || 'https://portal.triplebuzzsmokeshop.com'
+
 const api = axios.create({
-  baseURL: '',
+  baseURL: API_URL,
   withCredentials: true,
 })
 
