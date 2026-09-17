@@ -1,4 +1,4 @@
-import api, { getStoredRefreshToken } from './client'
+import api from './client'
 
 export function register({ firstname, lastname, email, password, phno, gender }) {
   return api.post('/Api/register', { firstname, lastname, email, password, phno, gender }).then((r) => r.data)
@@ -17,7 +17,7 @@ export function reverify(email) {
 }
 
 export function logout() {
-  return api.post('/Api/logout', { refreshToken: getStoredRefreshToken() }).then((r) => r.data)
+  return api.post('/Api/logout').then((r) => r.data)
 }
 
 export function getProfile() {
