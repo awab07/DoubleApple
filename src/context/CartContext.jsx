@@ -41,7 +41,6 @@ export function CartProvider({ children }) {
           image: product.image?.[0]?.url || getImageForCategory(product.category),
           category: product.category,
           qty,
-          protection: false,
         },
       ]
     })
@@ -60,12 +59,6 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.map((i) => (i._id === id ? { ...i, qty } : i)))
   }
 
-  const toggleProtection = (id) => {
-    setItems((prev) =>
-      prev.map((i) => (i._id === id ? { ...i, protection: !i.protection } : i))
-    )
-  }
-
   const clearCart = () => setItems([])
 
   const count = useMemo(() => items.length, [items])
@@ -74,11 +67,6 @@ export function CartProvider({ children }) {
     () => items.reduce((sum, i) => sum + parseFloat(i.price) * i.qty, 0),
     [items]
   )
-  const protectionTotal = useMemo(
-    () => items.reduce((sum, i) => sum + (i.protection ? 1 : 0), 0),
-    [items]
-  )
-
   const openCart = () => setIsOpen(true)
   const closeCart = () => setIsOpen(false)
   const toggleCart = () => setIsOpen((v) => !v)
@@ -88,12 +76,10 @@ export function CartProvider({ children }) {
     addItem,
     removeItem,
     updateQty,
-    toggleProtection,
     clearCart,
     count,
     totalQty,
     subtotal,
-    protectionTotal,
     isOpen,
     openCart,
     closeCart,

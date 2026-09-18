@@ -61,8 +61,7 @@ const EMPTY_ADDRESS_FORM = { street: '', city: '', province: '', postalCode: '',
 const EMPTY_GUEST_FORM = { firstName: '', lastName: '', email: '', phone: '' }
 
 export default function Cart() {
-  const { items, updateQty, removeItem, toggleProtection, subtotal, protectionTotal, clearCart } =
-    useCart()
+  const { items, updateQty, removeItem, subtotal, clearCart } = useCart()
   const { isAuthenticated, user } = useAuth()
 
   const [savedAddresses, setSavedAddresses] = useState([])
@@ -129,14 +128,13 @@ export default function Cart() {
   }, [])
 
   const itemCount = items.reduce((s, i) => s + i.qty, 0)
-  const preDiscountTotal = subtotal + protectionTotal
   const rawDiscount = appliedCoupon
     ? appliedCoupon.discountType === 'percentage'
-      ? (preDiscountTotal * appliedCoupon.value) / 100
+      ? (subtotal * appliedCoupon.value) / 100
       : appliedCoupon.value
     : 0
-  const discount = Math.round(Math.min(rawDiscount, preDiscountTotal) * 100) / 100
-  const grandTotal = preDiscountTotal - discount
+  const discount = Math.round(Math.min(rawDiscount, subtotal) * 100) / 100
+  const grandTotal = subtotal - discount
 
   const selectedAddress = savedAddresses.find((a) => a._id === selectedAddressId) || null
   const shippingAddress = !isAuthenticated ? addressForm : addingAddress ? addressForm : selectedAddress
@@ -213,7 +211,7 @@ export default function Cart() {
     // order.totalAmount already has any coupon discount applied server-side
     // (see OrderController.prepareOrder) — don't subtract `discount` again
     // here, or a coupon gets applied twice on this confirmation screen.
-    setPlacedOrder({ order, protectionTotal, discount, grandTotal: order.totalAmount + protectionTotal })
+    setPlacedOrder({ order, discount, grandTotal: order.totalAmount })
     clearCart()
   }
 
@@ -329,14 +327,6 @@ export default function Cart() {
                 </span>
                 <span className="font-semibold text-[#1a1a17]">${order.totalAmount.toFixed(2)}</span>
               </div>
-              {placedOrder.protectionTotal > 0 && (
-                <div className="flex items-center justify-between">
-                  <span>Total Product Protection</span>
-                  <span className="font-semibold text-[#1a1a17]">
-                    ${placedOrder.protectionTotal.toFixed(2)}
-                  </span>
-                </div>
-              )}
               <div className="flex items-center justify-between">
                 <span>Total Shipping Price</span>
                 <span className="font-semibold text-[#3CA43C]">Free</span>
@@ -494,22 +484,6 @@ export default function Cart() {
                       </button>
                     </div>
                   </div>
-
-                  <label className="mt-4 flex items-start gap-3 border-t border-black/10 pt-4 text-sm text-[#4a4a43]">
-                    <input
-                      type="checkbox"
-                      checked={item.protection}
-                      onChange={() => toggleProtection(item._id)}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#3CA43C]"
-                    />
-                    <span className="flex-1">
-                      <span className="font-semibold text-[#1a1a17]">Product Protection</span>{' '}
-                      <span className="text-xs text-[#7a7a72]">
-                        The claim process is easy and instant, valid for 6 months
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-sm font-semibold text-[#1a1a17]">$1</span>
-                  </label>
                 </div>
               ))}
             </div>
@@ -771,12 +745,6 @@ export default function Cart() {
                       Total Product Price ({itemCount} Item{itemCount === 1 ? '' : 's'})
                     </span>
                     <span className="font-semibold text-[#1a1a17]">${subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Total Product Protection</span>
-                    <span className="font-semibold text-[#1a1a17]">
-                      ${protectionTotal.toFixed(2)}
-                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Total Shipping Price</span>
