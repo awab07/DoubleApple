@@ -1,0 +1,14 @@
+# SPA fallback: this is a client-side-routed React app, so only index.html
+# actually exists on the server — routes like /collections/flower only exist
+# inside the JS app. Without this, a direct visit/refresh on such a route
+# hits Apache/LiteSpeed's own 404 before React Router ever gets a chance to
+# handle it. This serves index.html for any request that isn't a real file
+# or directory, letting the client-side router take over.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
