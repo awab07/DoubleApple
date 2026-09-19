@@ -26,7 +26,10 @@ const CATEGORY_SHOWCASE_SECTIONS = [
   { category: 'Hookah Pot', limit: 6 },
 ]
 
-const STORAGE_KEY = 'da_home_preload_v1'
+// v2: v1 held results fetched newest-first, whose first product per category
+// could have no photo — drop those so returning visitors don't briefly render
+// a broken tile from their saved copy.
+const STORAGE_KEY = 'da_home_preload_v2'
 
 const cache = new Map() // key -> Promise<data>
 const resolvedCache = new Map() // key -> last-resolved data (for synchronous reads)
@@ -74,7 +77,7 @@ export function getHomeCategoryProducts(category, limit) {
   const key = keyFor(category, limit)
   let promise = cache.get(key)
   if (!promise) {
-    promise = getProducts({ category: CATEGORY_REAL_NAME[category], limit })
+    promise = getProducts({ category: CATEGORY_REAL_NAME[category], limit, imagesFirst: true })
       .then((data) => {
         resolvedCache.set(key, data)
         persistCache()

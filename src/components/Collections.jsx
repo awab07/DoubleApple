@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getHomeCategoryProducts, getCachedHomeCategoryProducts } from '../utils/preloadHome'
 import { CATEGORY_ORDER, CATEGORY_SLUG } from '../data/categories'
+import { getImageForCategory } from '../data/productImages'
 
 function buildItems(entries) {
   return entries
     .filter((r) => r.product)
     .map(({ cat, product }) => ({
       category: cat,
-      image: product.image?.[0]?.url,
+      // A category's representative product can still lack a photo (POS items
+      // without an upload) — fall back to the local category image, same as
+      // ProductCard, rather than rendering an <img> with no src.
+      image: product.image?.[0]?.url || getImageForCategory(product.category),
     }))
 }
 
