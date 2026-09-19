@@ -1,12 +1,14 @@
 import axios from 'axios'
 
-// Calls the backend directly. Hostinger's static hosting for this site
-// doesn't execute a custom Node server (confirmed: server.js never actually
-// runs there, despite deploying successfully — it's Jamstack/static-only),
-// so the same-origin proxy trick vercel.json/server.js relied on isn't
-// available here. Login itself works this way; persistence across a reload
-// still needs a same-site backend domain or non-cookie token storage.
-const API_URL = import.meta.env.VITE_API_URL || 'https://portal.triplebuzzsmokeshop.com'
+// Calls the API through api.doubleapplesmokeshop.com — a subdomain of this
+// site, so the backend's refresh-token cookie is same-site with
+// doubleapplesmokeshop.com and the browser keeps sending it. Calling the
+// shared backend on portal.triplebuzzsmokeshop.com directly made that cookie
+// cross-site, so the login session was lost on every reload. (Hostinger's
+// static hosting for this site can't run a same-origin proxy, hence the
+// subdomain; it forwards to the same shared backend.)
+const API_URL =
+  import.meta.env.VITE_API_URL || 'https://api.doubleapplesmokeshop.com/api/public/proxy'
 
 const api = axios.create({
   baseURL: API_URL,
