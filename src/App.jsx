@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import ScrollToTop from './components/ScrollToTop'
+import Canonical from './components/Canonical'
 import Home from './pages/Home'
 import CreateAccount from './pages/CreateAccount'
 import SignIn from './pages/SignIn'
@@ -25,6 +26,7 @@ function App() {
   return (
     <>
       <ScrollToTop />
+      <Canonical />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
