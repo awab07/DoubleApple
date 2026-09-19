@@ -43,7 +43,7 @@ export default function VisitUs() {
           title="Double Apple Smoke & Vape location map"
           className="h-[320px] w-full rounded-xl border border-black/10"
           loading="lazy"
-          src="https://www.google.com/maps?q=11220+N+Lamar+Blvd+B202,+Austin,+TX+78753&output=embed"
+          src="https://www.google.com/maps?q=Double+Apple+Smoke+Shop,+11220+N+Lamar+Blvd+B202,+Austin,+TX+78753&output=embed"
         />
       </div>
     </section>
