@@ -14,6 +14,14 @@ const BACKEND_URL = process.env.BACKEND_URL || 'https://portal.triplebuzzsmokesh
 // cookie first-party instead of a cross-site cookie Safari/Chrome silently
 // drop — the same trick vercel.json's rewrites did on Vercel, just run by
 // this server instead of Vercel's edge network.
+//
+// IMPORTANT: this only works if Hostinger actually runs this file as a
+// Node.js app (hPanel -> Websites -> this domain -> Node.js, startup file
+// "server.js", after "npm run build" has produced dist/). If the domain is
+// still configured as a plain static site, Hostinger serves dist/ directly
+// over Apache/LiteSpeed and this file never executes — requests then go
+// straight from the browser to BACKEND_URL again and the cross-site cookie
+// problem comes right back.
 const PROXIED_PATHS = [
   '/Api',
   '/Product',
@@ -30,10 +38,38 @@ app.use(
   createProxyMiddleware({
     target: BACKEND_URL,
     changeOrigin: true,
+    logger: console,
     // pathFilter (not mounting via app.use(path, ...)) so the full request
     // path reaches the backend unmodified — app.use(path, mw) would have
     // Express strip the matched prefix before the proxy ever sees it.
     pathFilter: PROXIED_PATHS,
+    on: {
+      proxyRes: (proxyRes) => {
+        // Defensive: if the backend ever starts sending an explicit Domain
+        // attribute on the refreshToken cookie, strip it. A Domain that
+        // doesn't match this proxy's own host makes the browser reject the
+        // cookie outright, silently reintroducing the exact bug this proxy
+        // exists to fix.
+        const setCookie = proxyRes.headers['set-cookie']
+        if (setCookie) {
+          proxyRes.headers['set-cookie'] = setCookie.map((cookie) =>
+            cookie.replace(/;\s*Domain=[^;]*/i, '')
+          )
+        }
+      },
+      error: (err, req, res) => {
+        console.error('[proxy] request failed:', err.message)
+        if (!res.headersSent) {
+          res.writeHead(502, { 'Content-Type': 'application/json' })
+        }
+        res.end(
+          JSON.stringify({
+            success: false,
+            message: 'Could not reach the backend. Please try again in a moment.',
+          })
+        )
+      },
+    },
   })
 )
 

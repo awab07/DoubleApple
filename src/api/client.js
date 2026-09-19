@@ -1,15 +1,16 @@
 import axios from 'axios'
 
-// Calls the backend directly. Hostinger's static hosting for this site
-// doesn't execute a custom Node server (confirmed: server.js never actually
-// runs there, despite deploying successfully — it's Jamstack/static-only),
-// so the same-origin proxy trick vercel.json/server.js relied on isn't
-// available here. Login itself works this way; persistence across a reload
-// still needs a same-site backend domain or non-cookie token storage.
-const API_URL = import.meta.env.VITE_API_URL || 'https://portal.triplebuzzsmokeshop.com'
-
+// Always same-origin: this app's own server (see server.js) proxies /Api,
+// /Product, /Order etc. straight through to the real backend, so the
+// browser only ever talks to this origin. That's what makes the backend's
+// refreshToken cookie first-party instead of a cross-site cookie that
+// Safari/Chrome silently drop — the same trick vercel.json's rewrites did
+// on Vercel, just run by our own Node server here on Hostinger instead.
+// Requires the Hostinger hosting for this domain to actually run
+// `node server.js` (a Node.js app), not serve dist/ as a static site —
+// see server.js for details.
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: '',
   withCredentials: true,
 })
 
