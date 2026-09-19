@@ -5,12 +5,10 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { WishlistProvider } from './context/WishlistContext.jsx'
 import { preloadHomePage } from './utils/preloadHome.js'
-import { preloadShopFirstPages } from './utils/preloadShop.js'
 import './index.css'
 import App from './App.jsx'
 
 preloadHomePage()
-preloadShopFirstPages()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

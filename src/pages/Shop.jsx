@@ -4,7 +4,6 @@ import { ChevronDownIcon } from '../components/Icons'
 import ProductCard from '../components/ProductCard'
 import VisitUs from '../components/VisitUs'
 import { getProducts } from '../api/products'
-import { getPreloadedShopFirstPage, SHOP_FIRST_PAGE_LIMIT } from '../utils/preloadShop'
 import {
   CATEGORY_ORDER as CATEGORIES,
   CATEGORY_REAL_NAME,
@@ -81,32 +80,8 @@ export default function Shop() {
   // this same problem on Triple Buzz's Shop page).
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
     setError('')
-
-    // Paint the preloaded first page straight away (see utils/preloadShop)
-    // while the request below revalidates it. Only when that page is exactly
-    // what would be on screen anyway: page 1, default page size and order,
-    // no price/search filter, at most one category.
-    const preloaded =
-      selectedCategories.length <= 1 &&
-      page === 1 &&
-      perPage === SHOP_FIRST_PAGE_LIMIT &&
-      sortBy === 'latest' &&
-      !minPrice &&
-      !maxPrice &&
-      !searchQuery.trim()
-        ? getPreloadedShopFirstPage(
-            selectedCategories.length === 1 ? CATEGORY_REAL_NAME[selectedCategories[0]] : undefined
-          )
-        : null
-    if (preloaded) {
-      const list = preloaded.products || []
-      setProducts(list)
-      setHasNextPage(list.length === perPage)
-      setLoading(false)
-    } else {
-      setLoading(true)
-    }
 
     if (selectedCategories.length > 1) {
       Promise.all(

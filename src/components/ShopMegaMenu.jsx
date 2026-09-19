@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { ArrowRightIcon } from './Icons'
 import { REFILL_POD_PRODUCTS, slugify } from '../data/products'
 import { CATEGORY_ORDER, CATEGORY_SLUG } from '../data/categories'
-import { preloadShopCategory } from '../utils/preloadShop'
 
 const MENU_COLUMNS = [
   {
@@ -59,7 +58,6 @@ export default function ShopMegaMenu({ onNavigate }) {
                   <Link
                     to={link.category ? `/collections/${CATEGORY_SLUG[link.category]}` : '/shop'}
                     onClick={onNavigate}
-                    onMouseEnter={() => preloadShopCategory(link.category)}
                     className="text-sm font-bold text-[#1a1a17] hover:text-[#3c6e35]"
                   >
                     {link.label}
