@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getHomeCategoryProducts, getCachedHomeCategoryProducts } from '../utils/preloadHome'
 import { CATEGORY_ORDER, CATEGORY_SLUG } from '../data/categories'
 import { getImageForCategory } from '../data/productImages'
+import { preloadShopCategory } from '../utils/preloadShop'
 
 function buildItems(entries) {
   return entries
@@ -26,7 +27,6 @@ const initialItems = buildItems(
 )
 
 export default function Collections() {
-  const navigate = useNavigate()
   const [items, setItems] = useState(initialItems)
   // Only show the loading state when there's nothing cached to show yet — a
   // background revalidation should never blank an already-populated section.
@@ -59,12 +59,13 @@ export default function Collections() {
     <section id="collections" className="mx-auto max-w-[1280px] px-5 py-7 lg:px-10">
       <div className="mb-2.5 flex items-end justify-between border-b border-black/10 pb-2">
         <h2 className="text-[15px] font-bold text-[#1a1a17] sm:text-lg">Premium collections</h2>
-        <a
-          href="/shop"
+        <Link
+          to="/shop"
+          onMouseEnter={() => preloadShopCategory()}
           className="text-xs font-semibold uppercase tracking-wide text-[#3c6e35] hover:underline"
         >
           View all categories
-        </a>
+        </Link>
       </div>
 
       {loading ? (
@@ -72,9 +73,15 @@ export default function Collections() {
       ) : (
         <div className="grid grid-cols-2 divide-x divide-y divide-black/10 border border-black/10 sm:grid-cols-4">
           {items.map((item) => (
-            <a
+            // A router <Link> (not a plain <a>) so the click stays inside the app
+            // and paints the category's preloaded first page instead of doing a
+            // full page load that throws the preload away.
+            <Link
               key={item.category}
-              href={`/collections/${CATEGORY_SLUG[item.category]}`}
+              to={`/collections/${CATEGORY_SLUG[item.category]}`}
+              onMouseEnter={() => preloadShopCategory(item.category)}
+              onFocus={() => preloadShopCategory(item.category)}
+              onTouchStart={() => preloadShopCategory(item.category)}
               className="group block p-1.5"
             >
               <div className="flex aspect-[3/2] w-full items-center justify-center rounded-sm bg-[#f2f1ec] p-2">
@@ -87,15 +94,12 @@ export default function Collections() {
               <div className="pt-1">
                 <div className="flex items-center justify-between gap-1">
                   <p className="truncate text-[11px] font-bold text-[#1a1a17]">{item.category}</p>
-                  <span
-                    className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-[#3c6e35] transition group-hover:underline"
-                    onClick={() => navigate(`/collections/${CATEGORY_SLUG[item.category]}`)}
-                  >
+                  <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-[#3c6e35] transition group-hover:underline">
                     Shop
                   </span>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       )}

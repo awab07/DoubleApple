@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import ProductCard from './ProductCard'
 import { getHomeCategoryProducts, getCachedHomeCategoryProducts } from '../utils/preloadHome'
 import { CATEGORY_SLUG } from '../data/categories'
+import { preloadShopCategory } from '../utils/preloadShop'
 
 // A homepage strip for one category — same idea as showing off a curated
 // aisle in-store. Pulls real synced products for that category and hides
@@ -43,12 +45,15 @@ export default function CategoryShowcase({ category, limit = 6 }) {
     <section className="mx-auto max-w-[1280px] px-5 py-7 lg:px-10">
       <div className="mb-4 flex items-end justify-between border-b border-black/10 pb-2">
         <h2 className="text-[15px] font-bold text-[#1a1a17] sm:text-lg">{category}</h2>
-        <a
-          href={`/collections/${CATEGORY_SLUG[category]}`}
+        <Link
+          to={`/collections/${CATEGORY_SLUG[category]}`}
+          onMouseEnter={() => preloadShopCategory(category)}
+          onFocus={() => preloadShopCategory(category)}
+          onTouchStart={() => preloadShopCategory(category)}
           className="text-xs font-semibold uppercase tracking-wide text-[#3c6e35] hover:underline"
         >
           View all
-        </a>
+        </Link>
       </div>
 
       {loading ? (

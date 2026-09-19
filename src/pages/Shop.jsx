@@ -14,6 +14,7 @@ import {
 } from '../data/categories'
 
 const RATINGS = [5, 4, 3, 2, 1]
+const PAGE_WINDOW_SIZE = 4
 
 // Every real category currently tops out at a few hundred items (Vapes,
 // the largest, is ~250), so one request per selected category at this limit
@@ -47,6 +48,10 @@ export default function Shop() {
 
   const [products, setProducts] = useState([])
   const [hasNextPage, setHasNextPage] = useState(false)
+  // Real result count from the backend (or the merged list's length for a
+  // multi-category pick). null until known, and while a client-side price
+  // filter makes it inexact.
+  const [totalItems, setTotalItems] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -103,6 +108,7 @@ export default function Shop() {
       const list = preloaded.products || []
       setProducts(list)
       setHasNextPage(list.length === perPage)
+      setTotalItems(typeof preloaded.totalItems === 'number' ? preloaded.totalItems : null)
       setLoading(false)
     } else {
       setLoading(true)
@@ -145,6 +151,7 @@ export default function Shop() {
           }
 
           setHasNextPage(merged.length > page * perPage)
+          setTotalItems(merged.length)
           setProducts(merged.slice((page - 1) * perPage, page * perPage))
         })
         .catch(() => {
@@ -171,6 +178,9 @@ export default function Shop() {
         // Backend doesn't return a total/totalPages count, so infer whether another
         // page exists from whether this page came back full.
         setHasNextPage(list.length === perPage)
+        setTotalItems(
+          typeof data.totalItems === 'number' && !minPrice && !maxPrice ? data.totalItems : null
+        )
 
         // client-side: price range and name search (category is already applied
         // server-side above when exactly one is selected, or not at all here)
@@ -208,6 +218,16 @@ export default function Shop() {
       .catch(() => setRelatedProducts([]))
   }, [])
 
+  // Numbered pagination (1 2 3 4, windowed like Triple Buzz) whenever the real
+  // result count is known; otherwise the plain Previous/Next below.
+  const totalPages = totalItems ? Math.max(1, Math.ceil(totalItems / perPage)) : 1
+  const pageWindowStart = Math.floor((page - 1) / PAGE_WINDOW_SIZE) * PAGE_WINDOW_SIZE + 1
+  const pageWindowEnd = Math.min(pageWindowStart + PAGE_WINDOW_SIZE - 1, totalPages)
+  const goToPage = (n) => {
+    setPage(n)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const pageCopy =
     selectedCategories.length === 1
       ? CATEGORY_PAGE_COPY[selectedCategories[0]] || DEFAULT_SHOP_PAGE_COPY
@@ -220,7 +240,7 @@ export default function Shop() {
           {pageCopy.title} <span className="font-normal text-[#9a988e]">&ndash;</span> {pageCopy.subtitle}
         </h1>
         <p className="mt-1.5 text-sm text-[#7a7a72]">
-          {products.length} product{products.length === 1 ? '' : 's'}
+          {totalItems ?? products.length} product{(totalItems ?? products.length) === 1 ? '' : 's'}
         </p>
       </section>
 
@@ -385,7 +405,45 @@ export default function Shop() {
               </div>
             )}
 
-            {(page > 1 || hasNextPage) && (
+            {totalPages > 1 ? (
+              <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  {Array.from({ length: pageWindowEnd - pageWindowStart + 1 }).map((_, i) => {
+                    const pageNum = pageWindowStart + i
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => goToPage(pageNum)}
+                        className={`grid h-9 w-9 place-items-center rounded-md text-sm font-semibold transition ${
+                          page === pageNum ? 'bg-[#1a1a17] text-white' : 'text-[#4a4a43] hover:bg-black/5'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={pageWindowStart === 1}
+                    onClick={() => goToPage(Math.max(1, pageWindowStart - PAGE_WINDOW_SIZE))}
+                    className="flex items-center gap-1.5 rounded-md border border-black/15 px-4 py-2 text-sm font-semibold text-[#1a1a17] transition hover:bg-black/[0.02] disabled:opacity-40"
+                  >
+                    &larr; Previous
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pageWindowEnd === totalPages}
+                    onClick={() => goToPage(Math.min(totalPages, pageWindowStart + PAGE_WINDOW_SIZE))}
+                    className="flex items-center gap-1.5 rounded-md border border-black/15 px-4 py-2 text-sm font-semibold text-[#1a1a17] transition hover:bg-black/[0.02] disabled:opacity-40"
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              </div>
+            ) : (page > 1 || hasNextPage) ? (
               <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
                 <p className="text-sm text-[#4a4a43]">Page {page}</p>
                 <div className="flex items-center gap-3">
@@ -413,7 +471,7 @@ export default function Shop() {
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </section>
